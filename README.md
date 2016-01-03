@@ -1,5 +1,5 @@
 #Tabulate Keywords
-###Get Search Count results from pubmed for specified queries:
+##Get Search Count results from pubmed for specified queries:
  example:
 
  `cat journals.txt`
@@ -23,7 +23,8 @@
 ```
 
  resulting queries =
- # Journal tool
+
+#### Journal tool
  ```
  ("Nature"[Journal]) AND ("income"[Text Word] OR
         "poverty"[Text Word] OR "social class"[MeSH Terms] OR
@@ -31,7 +32,7 @@
             ("%s"[Date - Publication] : "%s"[Date - Publication])
  ```
 
-# Author tool
+#### Author tool
 ```
  ("Reshma Jagsi"[Author]) AND ("income"[Text Word] OR
         "poverty"[Text Word] OR "social class"[MeSH Terms] OR
