@@ -42,25 +42,16 @@ def run(target_folder, journals_path=None, authors_path=None, keywords_path=None
     search_counts = results['search_counts']
     queries = results['queries']
     query_totals = results['query_totals']
-    keywords_only_counts = results['keywords_only_counts']
 
     # Output setup
     log_path = join(target_folder, 'log_results.txt')
     with open(log_path, 'w') as f:
         f.write(queries)
         f.write(query_totals)
-    results_table = DataFrame()
-    results_table['Dates'] = [str(x)[:10] + ' to ' + 
+    dates_index= [str(x)[:10] + ' to ' + 
             str(y)[:10] for x, y in date_ranges]
-    if len(search_counts) > 0:
-        for item in query_list:
-            results_table['Count - [' + item + ']'] = (
-                    search_counts[item]['partial'])
-            results_table['Total Count - [' + item + ']'] = (
-                                    search_counts[item]['total'])
-    else:
-        results_table['Count'] = keywords_only_counts
-    results_table.to_csv(target_path, index=False)
+    results_table = DataFrame(search_counts, index=dates_index)
+    results_table.to_csv(target_path)
 
     # Required print statement for crosscompute tool
     print('results_table_path = ' + target_path)
@@ -68,13 +59,16 @@ def run(target_folder, journals_path=None, authors_path=None, keywords_path=None
 
 def tabulate(query_list, date_ranges, text_words, mesh_terms, search_journals):
     search_counts = {}
-    keywords_only_counts = []
     queries = ""
     query_totals = ""
     # O(n*y) for n=len(query_list) and y=len(date_ranges) 
     if len(query_list) > 0:
         for item in query_list:
-            search_counts[item] = {'partial':[], 'total':[]} 
+            total = 'Total Count - [' + item + ']' 
+            partial = 'Count - [' + item + ']' 
+            search_counts[partial] = []
+            search_counts[total] = []
+            # search_counts[item] = {'partial':[], 'total':[]} 
             for from_date, to_date in date_ranges:
                 # Query totals (w/o keywords)
                 if search_journals:
@@ -84,7 +78,7 @@ def tabulate(query_list, date_ranges, text_words, mesh_terms, search_journals):
                     item_expression = get_expression(author_name=item, 
                             from_date=from_date, to_date=to_date)
                 item_count = get_search_count(item_expression)
-                search_counts[item]['total'].append(item_count)
+                search_counts[total].append(item_count)
                 print("Total - " + item_expression)
                 print(str(item_count) + '\n')
                 query_totals += ('Total - ' 
@@ -99,23 +93,24 @@ def tabulate(query_list, date_ranges, text_words, mesh_terms, search_journals):
                             mesh_terms=mesh_terms, from_date=from_date, to_date=to_date)
 
                 count = get_search_count(expression)
-                search_counts[item]['partial'].append(count)
+                search_counts[partial].append(count)
                 # Log is printed to standard output and file
                 print(expression)
                 print(str(count) + '\n')
                 queries += expression + '\n' + str(count) + '\n\n'
     else:
+        search_counts['Counts'] = []
         for from_date, to_date in date_ranges:
             expression = get_expression(text_terms=text_words, 
                     mesh_terms=mesh_terms, from_date=from_date, to_date=to_date)
             count = get_search_count(expression)
-            keywords_only_counts.append(count)
+            search_counts['Counts'].append(count)
             # Log is printed to standard output and file
             print(expression)
             print(str(count) + '\n')
             queries += expression + '\n' + str(count) + '\n\n'
     return dict(search_counts=search_counts, queries=queries, 
-            query_totals=query_totals, keywords_only_counts=keywords_only_counts)
+            query_totals=query_totals)
 
 if __name__ == '__main__':
     argument_parser = ArgumentParser()
