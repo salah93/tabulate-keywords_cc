@@ -1,12 +1,11 @@
-#Tabulate Keywords
-##Get Search Count results from pubmed for specified queries:
- * go to desired tool directory (author/journals)
- * install required files
-`pip install -r required files`
- * `crosscompute run`
- * `crosscompute serve`
+# Tabulate keywords
+## Count PubMed search results:
 
- example:
+* Install required files `pip install -r requirements.txt`
+* `crosscompute run`
+* `crosscompute serve`
+
+Example:
 
  `cat journals.txt`
  ```

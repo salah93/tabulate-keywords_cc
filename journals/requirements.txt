@@ -1,8 +1,0 @@
-beautifulsoup4
-crosscompute
-crosscompute-text 
-crosscompute-table
-invisibleroads_macros
-lxml
-pandas
-requests

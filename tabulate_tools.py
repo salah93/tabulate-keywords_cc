@@ -9,6 +9,7 @@ from os.path import join, exists
 class ToolError(Exception):
     pass
 
+
 def get_expression(journal_name=None, text_terms=None, mesh_terms=None,
         from_date=None, to_date=None, custom_expression=None, author_name=None):
     '''
@@ -18,8 +19,7 @@ def get_expression(journal_name=None, text_terms=None, mesh_terms=None,
         ("%s"[Journal]) AND ("%s"[Text Word] OR 
         "%s"[Text Word] OR "%s"[MeSH Terms] OR 
             "%s"[MeSH Terms]) AND 
-            ("%s"[Date - Publication] : "%s"[Date - Publication]) AND 
-            ('%s[Author])
+            ("%s"[Date - Publication] : "%s"[Date - Publication])
     
         author: Roy
     '''
