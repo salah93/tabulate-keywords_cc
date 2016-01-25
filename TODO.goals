@@ -1,18 +1,24 @@
-Clarify meaning of interval
-Clarify difference between count and total count
-
-Fix spacing
-Specify error using exit
-    Remove ToolError
-Replace parse_date with dateutil
-Replace mkdir_local
-Fix parse_list
-Clean documentation
-Update TODO
-
-Remove import *
-
-Write example unit test for unique lines
-Write example unit test for punctuation
-
 + Combine two tools into one tool with compound cc.ini
++ Clarify difference between count and total count
++ Fix spacing
++ Remove import *
++ Replace parse_date with dateutil.parser.parser
++ Replace mkdir_local with invisibleroads_macros.disk.make_folder
++ Append to lists and join instead of concatenating strings
++ Fix parse_list
++ Specify error using exit
++ Clean documentation
++ Update TODO
++ Write example unit test for load_unique_lines
++ Rename interval to date_interval_in_years
+_ Use Period for datetime range index
+
+Reformat table as journal_name, from_date, to_date, keyword_article_count, total_article_count
+Generate plot of article count over time if user specifies date_interval_in_years
+    pip install -U crosscompute-image
+    print('keyword_article_count_image_path = %s' % join(target_folder, 'keyword_article_count.jpg'))
+Use syntastic or flake8 to conform to standard Python style guide
+
+Get number of first-name articles published
+Consider probability of false positives in author search
+    Use med school and place of residency to filter false positives

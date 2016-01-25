@@ -5,4 +5,5 @@ crosscompute-table
 invisibleroads_macros
 lxml
 pandas
+py.test
 requests
