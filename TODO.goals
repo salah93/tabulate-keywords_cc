@@ -2,7 +2,7 @@
 + Clarify difference between count and total count
 + Fix spacing
 + Remove import *
-+ Replace parse_date with dateutil.parser.parser
++ Replace parse_date with dateutil.parser.parse
 + Replace mkdir_local with invisibleroads_macros.disk.make_folder
 + Append to lists and join instead of concatenating strings
 + Fix parse_list
