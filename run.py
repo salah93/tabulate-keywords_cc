@@ -1,21 +1,21 @@
-'''
- Get search Count results from pubmed for specified queries:
- example:
- journals -> Science, Nature
- keywords -> poverty, income
- MeSh ->     social class, socioeconomic factors
- resulting queries = 
- [
- ("Nature"[Journal]) AND ("income"[Text Word] OR 
-        "poverty"[Text Word] OR "social class"[MeSH Terms] OR 
-            "socioeconomic factors"[MeSH Terms]),
- 
- ("Science"[Journal]) AND ("income"[Text Word] OR 
-        "poverty"[Text Word] OR "social class"[MeSH Terms] OR 
-            "socioeconomic factors"[MeSH Terms])
- ]
-    and the output would be their corresponding search count results found on pubmed
-'''
+"""
+Get search Count results from pubmed for specified queries:
+example:
+journals -> Science, Nature
+keywords -> poverty, income
+MeSh ->     social class, socioeconomic factors
+resulting queries = 
+[
+("Nature"[Journal]) AND ("income"[Text Word] OR 
+    "poverty"[Text Word] OR "social class"[MeSH Terms] OR 
+        "socioeconomic factors"[MeSH Terms]),
+
+("Science"[Journal]) AND ("income"[Text Word] OR 
+    "poverty"[Text Word] OR "social class"[MeSH Terms] OR 
+        "socioeconomic factors"[MeSH Terms])
+]
+and the output would be their corresponding search count results found on pubmed
+"""
 from argparse import ArgumentParser
 from pandas import DataFrame
 from tabulate_tools import *
@@ -115,7 +115,7 @@ def tabulate(query_list, date_ranges, text_words, mesh_terms, search_journals):
 if __name__ == '__main__':
     argument_parser = ArgumentParser()
     argument_parser.add_argument(
-        '--target_folder', nargs='?', default = 'results',
+        '--target_folder', nargs='?', default='results',
         type=mkdir_local, metavar='FOLDER')
     group = argument_parser.add_mutually_exclusive_group()
     group.add_argument(
@@ -147,9 +147,9 @@ if __name__ == '__main__':
     run(
         args.target_folder,
         journals_path=args.journals_text_path,
-        authors_path= args.authors_text_path,
+        authors_path=args.authors_text_path,
         keywords_path=args.keywords_text_path,
         mesh_terms_path=args.mesh_terms_text_path,
-        from_date=args.from_date, to_date=args.to_date,
-        date_interval_in_years=args.date_interval_in_years
-    )
+        from_date=args.from_date,
+        to_date=args.to_date,
+        date_interval_in_years=args.date_interval_in_years)

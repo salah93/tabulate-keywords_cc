@@ -1,5 +1,6 @@
-Combine two tools into one tool with compound cc.ini
+Clarify meaning of interval
 Clarify difference between count and total count
+
 Fix spacing
 Specify error using exit
     Remove ToolError
@@ -9,5 +10,9 @@ Fix parse_list
 Clean documentation
 Update TODO
 
+Remove import *
+
 Write example unit test for unique lines
 Write example unit test for punctuation
+
++ Combine two tools into one tool with compound cc.ini
