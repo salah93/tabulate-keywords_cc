@@ -1,48 +1,46 @@
-#Tabulate Keywords
-##Get Search Count results from pubmed for specified queries:
- * go to desired tool directory (author/journals)
- * install required files
-`pip install -r required files`
- * `crosscompute run`
- * `crosscompute serve`
+# Count PubMed search results
 
- example:
+```
+pip install -r requirements.txt
+py.test
+crosscompute run
+crosscompute serve
+```
+
+Example:
 
  `cat journals.txt`
  ```
- Science,
+ Science
  Nature
  ```
 
 `cat keywords.txt`
 
 ```
- poverty,
+ poverty
  income
 ```
 
 `cat mesh.txt`
 
 ```
- social class,
+ social class
  socioeconomic factors
 ```
 
- resulting queries =
-
 #### Journal tool
- ```
- ("Nature"[Journal]) AND ("income"[Text Word] OR
-        "poverty"[Text Word] OR "social class"[MeSH Terms] OR
-            "socioeconomic factors"[MeSH Terms]) AND
-            ("%s"[Date - Publication] : "%s"[Date - Publication])
- ```
+```
+("Nature"[Journal]) AND ("income"[Text Word] OR
+    "poverty"[Text Word] OR "social class"[MeSH Terms] OR
+        "socioeconomic factors"[MeSH Terms]) AND
+        ("%s"[Date - Publication] : "%s"[Date - Publication])
+```
 
 #### Author tool
 ```
- ("Reshma Jagsi"[Author]) AND ("income"[Text Word] OR
-        "poverty"[Text Word] OR "social class"[MeSH Terms] OR
-            "socioeconomic factors"[MeSH Terms]) AND
-            ("%s"[Date - Publication] : "%s"[Date - Publication]) AND
+("Reshma Jagsi"[Author]) AND ("income"[Text Word] OR
+    "poverty"[Text Word] OR "social class"[MeSH Terms] OR
+        "socioeconomic factors"[MeSH Terms]) AND
+        ("%s"[Date - Publication] : "%s"[Date - Publication]) AND
 ```
-and the output would be their corresponding search count results found on pubmed
