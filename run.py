@@ -1,5 +1,5 @@
 """
-ount PubMed search results for specified queries:
+Count PubMed search results for specified queries:
 
 journals -> Science, Nature
 keywords -> poverty, income
@@ -58,12 +58,10 @@ def run(
     with open(log_path, 'w') as f:
         f.write(queries)
         f.write(query_totals)
-    dates_index = [
-        str(x)[:10] + ' to ' + str(y)[:10] for x, y in date_ranges]
-    results_table = DataFrame(search_counts, index=dates_index)
-    results_table.to_csv(target_path)
+    results_table = DataFrame(search_counts)
+    results_table.to_csv(target_path, index=False)
 
-    # TODO: add image
+    # image of plot
     axes = (results_table * 100).plot()
     axes.set_title('Percent frequency over time')
     figure = axes.get_figure()
@@ -76,25 +74,34 @@ def run(
 
 
 def tabulate(query_list, date_ranges, text_words, mesh_terms, search_journals):
-    search_counts = {}
-    queries = []
-    query_totals = []
+    search_counts, queries, query_totals = {}, [], []
     # O(n*y) for n=len(query_list) and y=len(date_ranges)
     if query_list:
-        for item in query_list:
-            total = 'Total Article Count [' + item + ']'
-            partial = 'Keyword Article Count [' + item + ']'
-            search_counts[partial] = []
-            search_counts[total] = []
-            for from_date, to_date in date_ranges:
+        search_counts['Journals'], search_counts['Dates'] = [], []
+        partial = 'Keyword Article Count'
+        total = 'Total Article Count'
+        search_counts[partial], search_counts[total] = [], []
+        for from_date, to_date in date_ranges:
+            for item in query_list:
+                date_index = str(from_date)[:10] + ' to ' + str(to_date)[:10]
+                search_counts['Dates'].append(date_index)
+                search_counts['Journals'].append(item)
                 # Query totals (w/o keywords)
                 if search_journals:
                     item_expression = get_expression(
                         journal_name=item,
                         from_date=from_date, to_date=to_date)
+                    expression = get_expression(
+                        journal_name=item, text_terms=text_words,
+                        mesh_terms=mesh_terms,
+                        from_date=from_date, to_date=to_date)
                 else:
                     item_expression = get_expression(
                         author_name=item,
+                        from_date=from_date, to_date=to_date)
+                    expression = get_expression(
+                        author_name=item, text_terms=text_words,
+                        mesh_terms=mesh_terms,
                         from_date=from_date, to_date=to_date)
                 item_count = get_search_count(item_expression)
                 search_counts[total].append(item_count)
@@ -104,17 +111,6 @@ def tabulate(query_list, date_ranges, text_words, mesh_terms, search_journals):
                     'Total - ' + item_expression + '\n' + str(item_count))
 
                 # Get search count data for each Query (w/ keywords)
-                if search_journals:
-                    expression = get_expression(
-                        journal_name=item, text_terms=text_words,
-                        mesh_terms=mesh_terms,
-                        from_date=from_date, to_date=to_date)
-                else:
-                    expression = get_expression(
-                        author_name=item, text_terms=text_words,
-                        mesh_terms=mesh_terms,
-                        from_date=from_date, to_date=to_date)
-
                 count = get_search_count(expression)
                 search_counts[partial].append(count)
                 # Log is printed to standard output and file
