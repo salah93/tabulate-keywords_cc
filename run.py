@@ -1,5 +1,5 @@
 """
-Count PubMed search results for specified queries:
+ount PubMed search results for specified queries:
 
 journals -> Science, Nature
 keywords -> poverty, income
@@ -29,6 +29,9 @@ def run(
         keywords_path=None, mesh_terms_path=None,
         from_date=None, to_date=None, date_interval_in_years=None):
     target_path = join(target_folder, 'results.csv')
+    image_path = join(target_folder, 'keyword_article_count.jpg')
+    log_path = join(target_folder, 'log_results.txt')
+
     # Input retrieval
     journals = load_unique_lines(journals_path)
     text_words = load_unique_lines(keywords_path)
@@ -52,7 +55,6 @@ def run(
     query_totals = results['query_totals']
 
     # Output setup
-    log_path = join(target_folder, 'log_results.txt')
     with open(log_path, 'w') as f:
         f.write(queries)
         f.write(query_totals)
@@ -61,9 +63,16 @@ def run(
     results_table = DataFrame(search_counts, index=dates_index)
     results_table.to_csv(target_path)
 
+    # TODO: add image
+    axes = (results_table * 100).plot()
+    axes.set_title('Percent frequency over time')
+    figure = axes.get_figure()
+    figure.savefig(image_path)
+
     # Required print statement for crosscompute tool
     print('results_table_path = ' + target_path)
     print('log_text_path = ' + log_path)
+    print('keyword_article_count_image_path = ' + image_path)
 
 
 def tabulate(query_list, date_ranges, text_words, mesh_terms, search_journals):
@@ -71,13 +80,12 @@ def tabulate(query_list, date_ranges, text_words, mesh_terms, search_journals):
     queries = []
     query_totals = []
     # O(n*y) for n=len(query_list) and y=len(date_ranges)
-    if len(query_list) > 0:
+    if query_list:
         for item in query_list:
             total = 'Total Article Count [' + item + ']'
             partial = 'Keyword Article Count [' + item + ']'
             search_counts[partial] = []
             search_counts[total] = []
-            # search_counts[item] = {'partial':[], 'total':[]}
             for from_date, to_date in date_ranges:
                 # Query totals (w/o keywords)
                 if search_journals:
