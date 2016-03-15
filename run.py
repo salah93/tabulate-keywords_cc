@@ -62,16 +62,16 @@ def run(
     results_table = DataFrame(search_counts)
     results_table.to_csv(target_path, index=False)
 
-    # image of plot
-    axes = (results_table * 100).plot()
-    axes.set_title('Percent frequency over time')
-    figure = axes.get_figure()
-    figure.savefig(image_path)
-
     # Required print statement for crosscompute tool
     print('results_table_path = ' + target_path)
     print('log_text_path = ' + log_path)
-    print('keyword_article_count_image_path = ' + image_path)
+    # image of plot
+    if date_interval_in_years:
+        axes = (results_table * 100).plot()
+        axes.set_title('Percent frequency over time')
+        figure = axes.get_figure()
+        figure.savefig(image_path)
+        print('keyword_article_count_image_path = ' + image_path)
 
 
 def tabulate(query_list, date_ranges, text_words, mesh_terms, search_journals):
