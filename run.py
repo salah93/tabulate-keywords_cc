@@ -15,6 +15,7 @@ MeSh -> social class, socioeconomic factors
 """
 import datetime
 from argparse import ArgumentParser
+from collections import OrderedDict
 from dateutil.parser import parse as parse_date
 from invisibleroads_macros.disk import make_folder
 from os.path import join
@@ -74,18 +75,22 @@ def run(
 
 
 def tabulate(query_list, date_ranges, text_words, mesh_terms, search_journals):
-    search_counts, queries, query_totals = {}, [], []
+    search_counts, queries, query_totals = OrderedDict(), [], []
     # O(n*y) for n=len(query_list) and y=len(date_ranges)
     if query_list:
-        search_counts['Journals'], search_counts['Dates'] = [], []
+        from_col, to_col = 'From Date', 'To Date'
+        journal_col = 'Journal Name'
         partial = 'Keyword Article Count'
         total = 'Total Article Count'
+        search_counts[from_col], search_counts[to_col] = [], []
+        search_counts[journal_col] = []
         search_counts[partial], search_counts[total] = [], []
         for from_date, to_date in date_ranges:
             for item in query_list:
-                date_index = str(from_date)[:10] + ' to ' + str(to_date)[:10]
-                search_counts['Dates'].append(date_index)
-                search_counts['Journals'].append(item)
+                # date_index = lambda x: str(x)[:10]
+                search_counts[from_col].append(from_date)
+                search_counts[to_col].append(to_date)
+                search_counts[journal_col].append(item)
                 # Query totals (w/o keywords)
                 if search_journals:
                     item_expression = get_expression(
