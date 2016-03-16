@@ -23,15 +23,15 @@ def get_expression(
     """
     expression_parts = []
     if journal_name:
-        expression_parts.append('"%s"[Journal]' % journal_name)
+        expression_parts.append('"{0}"[Journal]'.format(journal_name))
     if author_name:
-        expression_parts.append('%s[Author]' % author_name)
+        expression_parts.append('{0}[Author]'.format(author_name))
     if custom_expression:
         expression_parts.append(custom_expression)
     if text_terms or mesh_terms:
         terms = []
-        terms.extend('"%s"[Text Word]' % x for x in text_terms or [])
-        terms.extend('"%s"[MeSH Terms]' % x for x in mesh_terms or [])
+        terms.extend('"{0}"[Text Word]'.format(x) for x in text_terms or [])
+        terms.extend('"{0}"[MeSH Terms]'.format(x) for x in mesh_terms or [])
         expression_parts.append(' OR '.join(terms))
     if from_date:
         from_date_string = from_date.strftime(
@@ -39,12 +39,12 @@ def get_expression(
         to_date_string = to_date.strftime(
             '%Y/%m/%d') if to_date else '3000'
         expression_parts.append(
-            '"%s"[Date - Publication] : "%s"[Date - Publication]' % (
+            '"{0}"[Date - Publication] : "{1}"[Date - Publication]'.format(
                 from_date_string, to_date_string))
     if len(expression_parts) <= 1:
         expression = ''.join(expression_parts)
     else:
-        expression = '(%s)' % ') AND ('.join(expression_parts)
+        expression = '({0})'.format(') AND ('.join(expression_parts))
     return compact_whitespace(expression)
 
 
@@ -59,7 +59,7 @@ def get_search_count(expression):
                                                              retmax=retmax))
     soup = BeautifulSoup(response.text, 'xml')
     count = int(soup.find('Count').next_element)
-    articles_list = [article.next_element for
+    articles_list = [str(article.next_element) for
                      article in soup.find('IdList').find_all('Id')]
     return (count, articles_list)
 
