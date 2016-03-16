@@ -88,7 +88,7 @@ def run(
                       'First-Named Articles':
                       [len(article) for article in first_name_articles]}
         table = DataFrame(table_data)
-        table.to_csv(first_name_table_path)
+        table.to_csv(first_name_table_path, index=False)
         print('first_named_articles_text_path = ' + first_name_path)
         print('first_named_articles_table_path = ' + first_name_table_path)
 
