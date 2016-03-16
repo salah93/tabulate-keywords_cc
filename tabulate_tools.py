@@ -53,11 +53,15 @@ def get_search_count(expression):
     Retrieve search count from page requested by url+expression
     """
     url = 'http://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi'
-    response = requests.get(url + '?db=pubmed&', params=dict(term=expression))
+    # max num of articles to list
+    retmax = '20'
+    response = requests.get(url + '?db=pubmed&', params=dict(term=expression,
+                                                             retmax=retmax))
     soup = BeautifulSoup(response.text, 'xml')
+    count = int(soup.find('Count').next_element)
     articles_list = [article.next_element for
                      article in soup.find('IdList').find_all('Id')]
-    return articles_list
+    return (count, articles_list)
 
 
 def get_date_ranges(from_date, to_date, interval_in_years):
@@ -107,10 +111,9 @@ def get_first_name_articles(author, articles):
             soup = BeautifulSoup(response.text)
             auth = soup.find("div", class_="auths").findChild().next_element
             if auth.lower() == translated_name:
-                first_named_articles.append(article.next_element)
+                first_named_articles.append(article)
         except requests.HTTPError, e:
-            print('HTTP ERROR {0} occured'.format(e.code))
-            break
+            exit('HTTP ERROR {0}'.format(e.code))
     return first_named_articles
 
 

@@ -43,10 +43,10 @@ def run(
         date_ranges = get_date_ranges(
             from_date, to_date, date_interval_in_years)
     except ToolError as e:
-        exit('to_date.error = %s' % e)
+        exit('to_date.error = {0}'.format(e))
 
-    search_journals, query_list = (True, journals if journals
-                                   else False, authors)
+    search_journals, query_list = ((True, journals) if journals
+                                   else (False, authors))
     # Tabulate keywords
     results = tabulate(
         query_list, date_ranges, text_words, mesh_terms, search_journals)
@@ -61,16 +61,6 @@ def run(
         f.write(query_totals)
     results_table = DataFrame(search_counts)
     results_table.to_csv(target_path, index=False)
-    if author_articles:
-        first_name_articles = [(name,
-                                get_first_name_articles(
-                                    name, author_articles[name]))
-                               for name in authors]
-        first_name_path = join(target_folder, 'first_name_articles.csv')
-        columns = ['Author Name', 'First-Named Articles'],
-        table = DataFrame(first_name_articles, columns=columns)
-        table.to_csv(first_name_path)
-        print('first_named_articles_table_path = ' + first_name_path)
     # Required print statement for crosscompute tool
     print('results_table_path = ' + target_path)
     print('log_text_path = ' + log_path)
@@ -81,6 +71,26 @@ def run(
         figure = axes.get_figure()
         figure.savefig(image_path)
         print('keyword_article_count_image_path = ' + image_path)
+    if author_articles:
+        first_name_articles = [get_first_name_articles(
+                                    name, author_articles[name])
+                               for name in authors]
+        first_name_path = join(target_folder, 'first_name_articles.txt')
+        with open(first_name_path, 'w') as f:
+            log = []
+            for name, articles in zip(authors, first_name_articles):
+                log.append('\n' + name + ': ')
+                for article in articles:
+                    log.append('\t' + article)
+            f.write('\n'.join(log))
+        first_name_table_path = join(target_folder, 'first_name_articles.csv')
+        table_data = {'Author Name': authors,
+                      'First-Named Articles':
+                      [len(article) for article in first_name_articles]}
+        table = DataFrame(table_data)
+        table.to_csv(first_name_table_path)
+        print('first_named_articles_text_path = ' + first_name_path)
+        print('first_named_articles_table_path = ' + first_name_table_path)
 
 
 def tabulate(query_list, date_ranges, text_words, mesh_terms, search_journals):
@@ -119,8 +129,7 @@ def tabulate(query_list, date_ranges, text_words, mesh_terms, search_journals):
                         author_name=item, text_terms=text_words,
                         mesh_terms=mesh_terms,
                         from_date=from_date, to_date=to_date)
-                articles = get_search_count(item_expression)
-                item_count = len(articles)
+                item_count, articles = get_search_count(item_expression)
                 if not search_journals:
                     author_articles[item].extend(articles)
                 search_counts[total].append(item_count)
@@ -130,7 +139,7 @@ def tabulate(query_list, date_ranges, text_words, mesh_terms, search_journals):
                     'Total - ' + item_expression + '\n' + str(item_count))
 
                 # Get search count data for each Query (w/ keywords)
-                count = len(get_search_count(expression))
+                count, articles = get_search_count(expression)
                 search_counts[partial].append(count)
                 # Log is printed to standard output and file
                 print(expression)
