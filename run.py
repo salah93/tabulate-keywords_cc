@@ -13,16 +13,16 @@ MeSh -> social class, socioeconomic factors
     "poverty"[Text Word] OR "social class"[MeSH Terms] OR
         "socioeconomic factors"[MeSH Terms])
 """
+import collections
 import datetime
 from argparse import ArgumentParser
-from collections import OrderedDict
 from dateutil.parser import parse as parse_date
 from invisibleroads_macros.disk import make_folder
 from os.path import join
 from pandas import DataFrame
 from tabulate_tools import (
     ToolError, get_date_ranges, get_expression, get_search_count,
-    load_unique_lines)
+    load_unique_lines, get_first_name_articles)
 
 
 def run(
@@ -45,15 +45,15 @@ def run(
     except ToolError as e:
         exit('to_date.error = %s' % e)
 
-    query_list = journals if journals else authors
-    search_journals = True if journals else False
-
+    search_journals, query_list = (True, journals if journals
+                                   else False, authors)
     # Tabulate keywords
     results = tabulate(
         query_list, date_ranges, text_words, mesh_terms, search_journals)
     search_counts = results['search_counts']
     queries = results['queries']
     query_totals = results['query_totals']
+    author_articles = results['author_articles']
 
     # Output setup
     with open(log_path, 'w') as f:
@@ -61,7 +61,16 @@ def run(
         f.write(query_totals)
     results_table = DataFrame(search_counts)
     results_table.to_csv(target_path, index=False)
-
+    if author_articles:
+        first_name_articles = [(name,
+                                get_first_name_articles(
+                                    name, author_articles[name]))
+                               for name in authors]
+        first_name_path = join(target_folder, 'first_name_articles.csv')
+        columns = ['Author Name', 'First-Named Articles'],
+        table = DataFrame(first_name_articles, columns=columns)
+        table.to_csv(first_name_path)
+        print('first_named_articles_table_path = ' + first_name_path)
     # Required print statement for crosscompute tool
     print('results_table_path = ' + target_path)
     print('log_text_path = ' + log_path)
@@ -75,22 +84,24 @@ def run(
 
 
 def tabulate(query_list, date_ranges, text_words, mesh_terms, search_journals):
-    search_counts, queries, query_totals = OrderedDict(), [], []
+    search_counts, queries, query_totals = collections.OrderedDict(), [], []
     # O(n*y) for n=len(query_list) and y=len(date_ranges)
+    author_articles = (None if search_journals
+                       else collections.defaultdict(list))
     if query_list:
         from_col, to_col = 'From Date', 'To Date'
-        journal_col = 'Journal Name'
+        query_col = 'Journal Name' if search_journals else 'Author Name'
         partial = 'Keyword Article Count'
         total = 'Total Article Count'
         search_counts[from_col], search_counts[to_col] = [], []
-        search_counts[journal_col] = []
+        search_counts[query_col] = []
         search_counts[partial], search_counts[total] = [], []
         for from_date, to_date in date_ranges:
             for item in query_list:
                 # date_index = lambda x: str(x)[:10]
                 search_counts[from_col].append(from_date)
                 search_counts[to_col].append(to_date)
-                search_counts[journal_col].append(item)
+                search_counts[query_col].append(item)
                 # Query totals (w/o keywords)
                 if search_journals:
                     item_expression = get_expression(
@@ -108,7 +119,10 @@ def tabulate(query_list, date_ranges, text_words, mesh_terms, search_journals):
                         author_name=item, text_terms=text_words,
                         mesh_terms=mesh_terms,
                         from_date=from_date, to_date=to_date)
-                item_count = get_search_count(item_expression)
+                articles = get_search_count(item_expression)
+                item_count = len(articles)
+                if not search_journals:
+                    author_articles[item].extend(articles)
                 search_counts[total].append(item_count)
                 print('Total - ' + item_expression)
                 print(str(item_count) + '\n')
@@ -116,7 +130,7 @@ def tabulate(query_list, date_ranges, text_words, mesh_terms, search_journals):
                     'Total - ' + item_expression + '\n' + str(item_count))
 
                 # Get search count data for each Query (w/ keywords)
-                count = get_search_count(expression)
+                count = len(get_search_count(expression))
                 search_counts[partial].append(count)
                 # Log is printed to standard output and file
                 print(expression)
@@ -135,6 +149,7 @@ def tabulate(query_list, date_ranges, text_words, mesh_terms, search_journals):
             print(str(count) + '\n')
             queries.append(expression + '\n' + str(count))
     return dict(
+        author_articles=author_articles,
         search_counts=search_counts,
         queries='\n\n'.join(queries),
         query_totals='\n\n'.join(query_totals))

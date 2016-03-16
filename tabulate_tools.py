@@ -55,7 +55,9 @@ def get_search_count(expression):
     url = 'http://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi'
     response = requests.get(url + '?db=pubmed&', params=dict(term=expression))
     soup = BeautifulSoup(response.text, 'xml')
-    return int(soup.find('Count').next_element)
+    articles_list = [article.next_element for
+                     article in soup.find('IdList').find_all('Id')]
+    return articles_list
 
 
 def get_date_ranges(from_date, to_date, interval_in_years):
@@ -91,3 +93,31 @@ def normalize_line(x):
     x = x.replace(',', '')
     x = x.replace(';', '')
     return x.strip()
+
+
+def get_first_name_articles(author, articles):
+    first_named_articles = []
+    translated_name = translate_name(author)
+    for article in articles:
+        try:
+            url = 'http://www.ncbi.nlm.nih.gov/pubmed/' + str(article)
+            # potential for program to be blocked
+            response = requests.get(url)
+            response.raise_for_status()
+            soup = BeautifulSoup(response.text)
+            auth = soup.find("div", class_="auths").findChild().next_element
+            if auth.lower() == translated_name:
+                first_named_articles.append(article.next_element)
+        except requests.HTTPError, e:
+            print('HTTP ERROR {0} occured'.format(e.code))
+            break
+    return first_named_articles
+
+
+def translate_name(name):
+    first_middle_last = 3
+    parts_of_name = name.split(' ')
+    translated_name = parts_of_name[-1] + ' ' + parts_of_name[0][0]
+    if len(parts_of_name) == first_middle_last:
+        translated_name += parts_of_name[1][0]
+    return translated_name.lower()
