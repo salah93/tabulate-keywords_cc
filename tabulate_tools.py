@@ -73,7 +73,7 @@ def get_first_name_articles(author, articles):
             if auth.lower() == translated_name:
                 first_named_articles.append(article)
         except requests.HTTPError, e:
-            exit('HTTP ERROR {0}'.format(e.code))
+            exit('HTTP ERROR {0}'.format(e))
     return first_named_articles
 
 
