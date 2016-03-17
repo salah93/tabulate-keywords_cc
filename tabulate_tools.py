@@ -50,8 +50,8 @@ def get_search_count(expression):
     url = 'http://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi'
     # max num of articles to list
     retmax = '20'
-    response = requests.get(url + '?db=pubmed&', params=dict(term=expression,
-                                                             retmax=retmax))
+    params = {'db': 'pubmed', 'term': expression, 'retmax': retmax}
+    response = requests.get(url, params=params)
     soup = BeautifulSoup(response.text, 'xml')
     count = int(soup.find('Count').next_element)
     articles_list = [str(article.next_element) for
@@ -62,18 +62,16 @@ def get_search_count(expression):
 def get_first_name_articles(author, articles):
     first_named_articles = []
     translated_name = translate_name(author)
-    for article in articles:
-        try:
-            url = 'http://www.ncbi.nlm.nih.gov/pubmed/' + str(article)
-            # potential for program to be blocked
-            response = requests.get(url)
-            response.raise_for_status()
-            soup = BeautifulSoup(response.text)
-            auth = soup.find("div", class_="auths").findChild().next_element
-            if auth.lower() == translated_name:
-                first_named_articles.append(article)
-        except requests.HTTPError, e:
-            exit('HTTP ERROR {0}'.format(e))
+    url = 'http://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi'
+    articles_param = ','.join(articles)
+    params = {'db': 'pubmed', 'id': articles_param}
+    response = requests.get(url, params=params)
+    soup = BeautifulSoup(response.text, 'xml')
+    for article, article_info in zip(articles, soup.find_all('DocSum')):
+        auth = article_info.find(
+                "Item", attrs={"Name": "AuthorList"}).findChild().next_element
+        if auth.lower() == translated_name:
+            first_named_articles.append(article)
     return first_named_articles
 
 
