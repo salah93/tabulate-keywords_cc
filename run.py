@@ -21,8 +21,9 @@ from invisibleroads_macros.disk import make_folder
 from os.path import join
 from pandas import DataFrame
 from tabulate_tools import (
-    ToolError, get_date_ranges, get_expression, get_search_count,
-    load_unique_lines, get_first_name_articles)
+    get_expression, get_search_count,
+    get_first_name_articles)
+from load_lines import get_date_ranges, load_unique_lines, ToolError
 
 
 def run(
