@@ -1,6 +1,10 @@
+import re
 import requests
 from bs4 import BeautifulSoup
 from invisibleroads_macros.text import compact_whitespace
+
+
+PATTERN_AFFILIATION = re.compile(r'(.+)\s*\((.+)\)')
 
 
 def get_expression(
@@ -20,7 +24,16 @@ def get_expression(
     if journal_name:
         expression_parts.append('"{0}"[Journal]'.format(journal_name))
     if author_name:
-        expression_parts.append('{0}[Author]'.format(author_name))
+        match = PATTERN_AFFILIATION.search(author_name)
+        if match:
+            author_name, affiliation_string = match.groups()
+            affiliations = [x.strip() for x in affiliation_string.split(',')]
+            affiliation_expression = ' OR '.join(
+                '{0}[Affiliation]'.format(x) for x in affiliations)
+            expression_parts.append('{0}[Author] AND ({1})'.format(
+                author_name, affiliation_expression))
+        else:
+            expression_parts.append('{0}[Author]'.format(author_name))
     if custom_expression:
         expression_parts.append(custom_expression)
     if text_terms or mesh_terms:
@@ -43,13 +56,12 @@ def get_expression(
     return compact_whitespace(expression)
 
 
-def get_search_count(expression, retstart=0):
+def get_search_count(expression, retstart=0, retmax=1000):
     """
     Retrieve search count from page requested by url+expression
     """
     url = 'http://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi'
     # max num of articles to list
-    retmax = 1000
     params = {'db': 'pubmed', 'term': expression,
               'retmax': str(retmax), 'retstart': str(retstart)}
     response = requests.get(url, params=params)
