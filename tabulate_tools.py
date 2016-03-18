@@ -43,24 +43,28 @@ def get_expression(
     return compact_whitespace(expression)
 
 
-def get_search_count(expression):
+def get_search_count(expression, retstart=0):
     """
     Retrieve search count from page requested by url+expression
     """
     url = 'http://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi'
     # max num of articles to list
-    retmax = '20'
-    params = {'db': 'pubmed', 'term': expression, 'retmax': retmax}
+    retmax = 1000
+    params = {'db': 'pubmed', 'term': expression,
+              'retmax': str(retmax), 'retstart': str(retstart)}
     response = requests.get(url, params=params)
     soup = BeautifulSoup(response.text, 'xml')
     count = int(soup.find('Count').next_element)
     articles_list = [str(article.next_element) for
                      article in soup.find('IdList').find_all('Id')]
+    if count > (retmax + retstart):
+        articles_list.extend(get_search_count(expression, retstart+retmax)[1])
     return (count, articles_list)
 
 
 def get_first_name_articles(author, articles):
     first_named_articles = []
+    # articles = list(set(articles))
     translated_name = translate_name(author)
     url = 'http://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi'
     articles_param = ','.join(articles)

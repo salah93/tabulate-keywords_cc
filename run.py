@@ -29,7 +29,7 @@ from load_lines import get_date_ranges, load_unique_lines, ToolError
 def run(
         target_folder, journals_path=None, authors_path=None,
         keywords_path=None, mesh_terms_path=None,
-        from_date=None, to_date=None, date_interval_in_years=None):
+        from_date=None, to_date=None, date_interval_in_years=0):
     target_path = join(target_folder, 'results.csv')
     image_path = join(target_folder, 'keyword_article_count.jpg')
     log_path = join(target_folder, 'log_results.txt')
@@ -72,7 +72,7 @@ def run(
         figure = axes.get_figure()
         figure.savefig(image_path)
         print('keyword_article_count_image_path = ' + image_path)
-    if author_articles:
+    if not search_journals:
         first_name_articles = [get_first_name_articles(
                                     name, author_articles[name])
                                for name in authors]
@@ -87,7 +87,8 @@ def run(
         first_name_table_path = join(target_folder, 'first_name_articles.csv')
         table_data = {'Author Name': authors,
                       'First-Named Articles':
-                      [len(article) for article in first_name_articles]}
+                      [len(article_list) for
+                       article_list in first_name_articles]}
         table = DataFrame(table_data)
         table.to_csv(first_name_table_path, index=False)
         print('first_named_articles_text_path = ' + first_name_path)
