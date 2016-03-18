@@ -46,15 +46,16 @@ def run(
     except ToolError as e:
         exit('to_date.error = {0}'.format(e))
 
-    search_journals, query_list = ((True, journals) if journals
-                                   else (False, authors))
+    search_authors, query_list = ((True, authors) if authors
+                                  else (False, journals))
     # Tabulate keywords
     results = tabulate(
-        query_list, date_ranges, text_words, mesh_terms, search_journals)
+        query_list, date_ranges, text_words, mesh_terms, search_authors)
     search_counts = results['search_counts']
     queries = results['queries']
     query_totals = results['query_totals']
-    author_articles = results['author_articles']
+    first_name_articles = results['first_name_log']
+    first_name_table = results['first_name_table']
 
     # Output setup
     with open(log_path, 'w') as f:
@@ -72,37 +73,25 @@ def run(
         figure = axes.get_figure()
         figure.savefig(image_path)
         print('keyword_article_count_image_path = ' + image_path)
-    if not search_journals:
-        first_name_articles = [get_first_name_articles(
-                                    name, author_articles[name])
-                               for name in authors]
+    if search_authors:
         first_name_path = join(target_folder, 'first_name_articles.txt')
-        with open(first_name_path, 'w') as f:
-            log = []
-            for name, articles in zip(authors, first_name_articles):
-                log.append('\n' + name + ': ')
-                for article in articles:
-                    log.append('\t' + article)
-            f.write('\n'.join(log))
         first_name_table_path = join(target_folder, 'first_name_articles.csv')
-        table_data = {'Author Name': authors,
-                      'First-Named Articles':
-                      [len(article_list) for
-                       article_list in first_name_articles]}
-        table = DataFrame(table_data)
+        with open(first_name_path, 'w') as f:
+            f.write(first_name_articles)
+        table = DataFrame(first_name_table, columns=['Author', 'Count'])
         table.to_csv(first_name_table_path, index=False)
         print('first_named_articles_text_path = ' + first_name_path)
         print('first_named_articles_table_path = ' + first_name_table_path)
 
 
-def tabulate(query_list, date_ranges, text_words, mesh_terms, search_journals):
+def tabulate(query_list, date_ranges, text_words, mesh_terms, search_authors):
     search_counts, queries, query_totals = collections.OrderedDict(), [], []
     # O(n*y) for n=len(query_list) and y=len(date_ranges)
-    author_articles = (None if search_journals
-                       else collections.defaultdict(list))
+    author_articles = (collections.defaultdict(list) if search_authors
+                       else None)
     if query_list:
         from_col, to_col = 'From Date', 'To Date'
-        query_col = 'Journal Name' if search_journals else 'Author Name'
+        query_col = 'Author Name' if search_authors else 'Journal Name'
         partial = 'Keyword Article Count'
         total = 'Total Article Count'
         search_counts[from_col], search_counts[to_col] = [], []
@@ -115,15 +104,7 @@ def tabulate(query_list, date_ranges, text_words, mesh_terms, search_journals):
                 search_counts[to_col].append(to_date)
                 search_counts[query_col].append(item)
                 # Query totals (w/o keywords)
-                if search_journals:
-                    item_expression = get_expression(
-                        journal_name=item,
-                        from_date=from_date, to_date=to_date)
-                    expression = get_expression(
-                        journal_name=item, text_terms=text_words,
-                        mesh_terms=mesh_terms,
-                        from_date=from_date, to_date=to_date)
-                else:
+                if search_authors:
                     item_expression = get_expression(
                         author_name=item,
                         from_date=from_date, to_date=to_date)
@@ -131,15 +112,22 @@ def tabulate(query_list, date_ranges, text_words, mesh_terms, search_journals):
                         author_name=item, text_terms=text_words,
                         mesh_terms=mesh_terms,
                         from_date=from_date, to_date=to_date)
+                else:
+                    item_expression = get_expression(
+                        journal_name=item,
+                        from_date=from_date, to_date=to_date)
+                    expression = get_expression(
+                        journal_name=item, text_terms=text_words,
+                        mesh_terms=mesh_terms,
+                        from_date=from_date, to_date=to_date)
                 item_count, articles = get_search_count(item_expression)
-                if not search_journals:
+                if search_authors:
                     author_articles[item].extend(articles)
                 search_counts[total].append(item_count)
                 print('Total - ' + item_expression)
                 print(str(item_count) + '\n')
                 query_totals.append(
                     'Total - ' + item_expression + '\n' + str(item_count))
-
                 # Get search count data for each Query (w/ keywords)
                 count, articles = get_search_count(expression)
                 search_counts[partial].append(count)
@@ -159,8 +147,21 @@ def tabulate(query_list, date_ranges, text_words, mesh_terms, search_journals):
             print(expression)
             print(str(count) + '\n')
             queries.append(expression + '\n' + str(count))
+    if author_articles:
+        authors = query_list
+        first_name_articles = [get_first_name_articles(
+                                    name, author_articles[name])
+                               for name in authors]
+        log = []
+        for name, articles in zip(authors, first_name_articles):
+            log.append('\n' + name + ': ')
+            for article in articles:
+                log.append('\t' + article)
+        table_data = zip(authors, [len(article_list)
+                                   for article_list in first_name_articles])
     return dict(
-        author_articles=author_articles,
+        first_name_log='\n'.join(log),
+        first_name_table=table_data,
         search_counts=search_counts,
         queries='\n\n'.join(queries),
         query_totals='\n\n'.join(query_totals))
