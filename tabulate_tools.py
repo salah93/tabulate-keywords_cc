@@ -69,8 +69,9 @@ def get_search_count(expression, retstart=0, retmax=1000):
     count = int(soup.find('Count').next_element)
     articles_list = [str(article.next_element) for
                      article in soup.find('IdList').find_all('Id')]
-    if count > (retmax + retstart):
-        articles_list.extend(get_search_count(expression, retstart+retmax)[1])
+    if 'Author' in expression and count > (retmax + retstart):
+        articles_list.extend(get_search_count(expression,
+                             retstart=(retstart + retmax + 1))[1])
     return (count, articles_list)
 
 

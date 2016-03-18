@@ -85,6 +85,8 @@ def run(
 
 
 def tabulate(query_list, date_ranges, text_words, mesh_terms, search_authors):
+    log = ""
+    table_data = None
     search_counts, queries, query_totals = collections.OrderedDict(), [], []
     # O(n*y) for n=len(query_list) and y=len(date_ranges)
     author_articles = (collections.defaultdict(list) if search_authors
@@ -136,13 +138,19 @@ def tabulate(query_list, date_ranges, text_words, mesh_terms, search_authors):
                 print(str(count) + '\n')
                 queries.append(expression + '\n' + str(count))
     else:
-        search_counts['Counts'] = []
+        from_col = 'From Date'
+        to_col = 'To Date'
+        keyword_count = 'Count'
+        search_counts[from_col], search_counts[to_col] = [], []
+        search_counts[keyword_count] = []
         for from_date, to_date in date_ranges:
             expression = get_expression(
                 text_terms=text_words, mesh_terms=mesh_terms,
                 from_date=from_date, to_date=to_date)
-            count = get_search_count(expression)
-            search_counts['Counts'].append(count)
+            count, articles = get_search_count(expression)
+            search_counts[from_col].append(from_date)
+            search_counts[to_col].append(to_date)
+            search_counts[keyword_count].append(count)
             # Log is printed to standard output and file
             print(expression)
             print(str(count) + '\n')
