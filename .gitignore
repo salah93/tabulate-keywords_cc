@@ -1,2 +1,5 @@
 *.pyc
 *.swp
+.ipynb_checkpoints
+notes.txt
+update_tools.ipynb
