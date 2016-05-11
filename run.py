@@ -15,15 +15,38 @@ MeSh -> social class, socioeconomic factors
 """
 import collections
 import datetime
+import sqlite3
+
 from argparse import ArgumentParser
+from contextlib import contextmanager
 from dateutil.parser import parse as parse_date
 from invisibleroads_macros.disk import make_folder
 from os.path import join
 from pandas import DataFrame
+
 from tabulate_tools import (
     get_expression, get_search_count,
     get_first_name_articles)
 from load_lines import get_date_ranges, load_unique_lines, ToolError
+
+
+@contextmanager
+def query():
+    """
+    Creates a cursor from a database functions can access
+    using 'with' statement
+    """
+    db = './queries.db'
+    conn = sqlite3.connect(db)
+    cursor = conn.cursor()
+    try:
+        yield cursor
+    except:
+        raise
+    else:
+        cursor.commit()
+    finally:
+        cursor.close()
 
 
 def run(
@@ -122,7 +145,22 @@ def tabulate(query_list, date_ranges, text_words, mesh_terms, search_authors):
                         journal_name=item, text_terms=text_words,
                         mesh_terms=mesh_terms,
                         from_date=from_date, to_date=to_date)
-                item_count, articles = get_search_count(item_expression)
+                with query() as cursor:
+                    item_count = cursor.execute("""SELECT count from count
+                                                where query = ?""",
+                                                (item_expression,)).fetchone()
+                    articles = cursor.execute("""SELECT article from articles
+                                              where query = ?""",
+                                              (item_expression,)).fetchall()
+                if not item_count or not articles:
+                    item_count, articles = get_search_count(item_expression)
+                    with query() as cursor:
+                        cursor.execute("""INSERT INTO count(query, count)
+                                       values(?, ?)""",
+                                       (expression, item_count))
+                        (cursor.execute("""INSERT INTO articles(query, article)
+                                       values(?, ?)""", (expression, article))
+                         for article in articles)
                 if search_authors:
                     author_articles[item].extend(articles)
                 search_counts[total].append(item_count)
@@ -131,7 +169,15 @@ def tabulate(query_list, date_ranges, text_words, mesh_terms, search_authors):
                 query_totals.append(
                     'Total - ' + item_expression + '\n' + str(item_count))
                 # Get search count data for each Query (w/ keywords)
-                count, articles = get_search_count(expression)
+                with query() as cursor:
+                    count = cursor.execute("""SELECT count from count
+                                           where query=?""",
+                                           (expression,)).fetchone()
+                if not count:
+                    count, articles = get_search_count(expression)
+                    with query() as cursor:
+                        cursor.execute("""INSERT INTO count(query, count)
+                                       values(?, ?)""", (expression, count))
                 search_counts[partial].append(count)
                 # Log is printed to standard output and file
                 print(expression)
@@ -147,7 +193,15 @@ def tabulate(query_list, date_ranges, text_words, mesh_terms, search_authors):
             expression = get_expression(
                 text_terms=text_words, mesh_terms=mesh_terms,
                 from_date=from_date, to_date=to_date)
-            count, articles = get_search_count(expression)
+            with query() as cursor:
+                count = cursor.execute("""SELECT count from count
+                                       where query = ?""",
+                                       (expression,)).fetchone()
+            if not count:
+                count, articles = get_search_count(expression)
+                with query() as cursor:
+                    cursor.execute("""INSERT INTO count(query, count)
+                                   values(?, ?)""", (expression, count))
             search_counts[from_col].append(from_date)
             search_counts[to_col].append(to_date)
             search_counts[keyword_count].append(count)
