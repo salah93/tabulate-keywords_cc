@@ -1,9 +1,7 @@
 beautifulsoup4
 crosscompute
-crosscompute-text 
-crosscompute-table
+crosscompute-types
 invisibleroads_macros
 lxml
 pandas
-pytest
 requests
