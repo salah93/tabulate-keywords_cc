@@ -14,11 +14,11 @@ MeSh -> social class, socioeconomic factors
         "socioeconomic factors"[MeSH Terms])
 """
 import collections
-import datetime
 import sqlite3
 
 from argparse import ArgumentParser
 from contextlib import contextmanager
+from datetime import datetime
 from dateutil.parser import parse as parse_date
 from invisibleroads_macros.disk import make_folder
 from os.path import join
@@ -44,9 +44,9 @@ def query():
     except:
         raise
     else:
-        cursor.commit()
+        conn.commit()
     finally:
-        cursor.close()
+        conn.close()
 
 
 def run(
@@ -62,7 +62,9 @@ def run(
     text_words = load_unique_lines(keywords_path)
     mesh_terms = load_unique_lines(mesh_terms_path)
     authors = load_unique_lines(authors_path)
-    # Get list containing tuples of date ranges based on interval
+
+    # Get list containing intervals of date ranges based on interval specified
+    #  by user
     try:
         date_ranges = get_date_ranges(
             from_date, to_date, date_interval_in_years)
@@ -152,15 +154,18 @@ def tabulate(query_list, date_ranges, text_words, mesh_terms, search_authors):
                     articles = cursor.execute("""SELECT article from articles
                                               where query = ?""",
                                               (item_expression,)).fetchall()
-                if not item_count or not articles:
+                if not item_count:
                     item_count, articles = get_search_count(item_expression)
                     with query() as cursor:
                         cursor.execute("""INSERT INTO count(query, count)
                                        values(?, ?)""",
-                                       (expression, item_count))
-                        (cursor.execute("""INSERT INTO articles(query, article)
-                                       values(?, ?)""", (expression, article))
-                         for article in articles)
+                                       (item_expression, item_count))
+                        if articles:
+                            (cursor.execute("""INSERT INTO articles(query, article)
+                                           values(?, ?)""", (item_expression, article))
+                             for article in articles)
+                else:
+                    item_count = item_count[0]
                 if search_authors:
                     author_articles[item].extend(articles)
                 search_counts[total].append(item_count)
@@ -174,10 +179,12 @@ def tabulate(query_list, date_ranges, text_words, mesh_terms, search_authors):
                                            where query=?""",
                                            (expression,)).fetchone()
                 if not count:
-                    count, articles = get_search_count(expression)
+                    count, _ = get_search_count(expression)
                     with query() as cursor:
                         cursor.execute("""INSERT INTO count(query, count)
                                        values(?, ?)""", (expression, count))
+                else:
+                    count = count[0]
                 search_counts[partial].append(count)
                 # Log is printed to standard output and file
                 print(expression)
@@ -198,10 +205,12 @@ def tabulate(query_list, date_ranges, text_words, mesh_terms, search_authors):
                                        where query = ?""",
                                        (expression,)).fetchone()
             if not count:
-                count, articles = get_search_count(expression)
+                count, _ = get_search_count(expression)
                 with query() as cursor:
                     cursor.execute("""INSERT INTO count(query, count)
                                    values(?, ?)""", (expression, count))
+            else:
+                count = count[0]
             search_counts[from_col].append(from_date)
             search_counts[to_col].append(to_date)
             search_counts[keyword_count].append(count)
@@ -219,8 +228,8 @@ def tabulate(query_list, date_ranges, text_words, mesh_terms, search_authors):
             log.append('\n' + name + ': ')
             for article in articles:
                 log.append('\t' + article)
-        table_data = zip(authors, [len(article_list)
-                                   for article_list in first_name_articles])
+        table_data = list(zip(authors, [len(article_list)
+                                   for article_list in first_name_articles]))
     return dict(
         first_name_log='\n'.join(log),
         first_name_table=table_data,
@@ -255,7 +264,7 @@ if __name__ == '__main__':
     argument_parser.add_argument(
         '--to_date', '-T', nargs='?',
         type=parse_date, metavar='DATE',
-        default=datetime.datetime.today(),
+        default=datetime.today(),
         help='%%m-%%d-%%Y')
     argument_parser.add_argument(
         '--date_interval_in_years', '-I',

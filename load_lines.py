@@ -26,15 +26,13 @@ def get_date_ranges(from_date, to_date, interval_in_years):
     return date_ranges
 
 
-def load_unique_lines(source_path):
-    if not source_path:
+def load_unique_lines(source):
+    if not source:
         return []
-    source_text = open(source_path, 'rt').read().strip()
-    lines = set((normalize_line(x) for x in source_text.splitlines()))
+    with open(source, 'rt') as f:
+        lines = set((normalize_line(line) for line in f)) 
     return sorted(filter(lambda x: x, lines))
 
 
 def normalize_line(x):
-    x = x.replace(',', '')
-    x = x.replace(';', '')
-    return x.strip()
+    return x.replace(',', '').replace(';', '').strip()
