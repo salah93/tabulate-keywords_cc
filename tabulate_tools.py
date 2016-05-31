@@ -69,14 +69,13 @@ def get_search_count(expression, retstart=0, retmax=1000):
     count = int(soup.find('Count').next_element)
     articles_list = [str(article.next_element) for
                      article in soup.find('IdList').find_all('Id')]
-    if 'Author' in expression and count > (retmax + retstart):
+    if count > (retmax + retstart):
         articles_list.extend(get_search_count(expression,
                              retstart=(retstart + retmax + 1))[1])
-    return (count, articles_list)
+    return articles_list
 
 
 def get_first_name_articles(author, articles):
-    first_named_articles = []
     # articles = list(set(articles))
     translated_name = translate_name(author)
     url = 'http://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi'
@@ -84,10 +83,12 @@ def get_first_name_articles(author, articles):
     params = {'db': 'pubmed', 'id': articles_param}
     response = requests.get(url, params=params)
     soup = BeautifulSoup(response.text, 'xml')
-    for article, article_info in zip(articles, soup.find_all('DocSum')):
+    first_named_articles = []
+    for article_info in soup.find_all('DocSum'):
         auth = article_info.find(
                 "Item", attrs={"Name": "AuthorList"}).findChild().next_element
-        if auth.lower() == translated_name:
+        article = article_info.find("Id").next_element
+        if auth.lower() == translated_name.lower():
             first_named_articles.append(article)
     return first_named_articles
 
@@ -98,4 +99,4 @@ def translate_name(name):
     translated_name = parts_of_name[-1] + ' ' + parts_of_name[0][0]
     if len(parts_of_name) == first_middle_last:
         translated_name += parts_of_name[1][0]
-    return translated_name.lower()
+    return translated_name
