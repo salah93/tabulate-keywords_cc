@@ -25,8 +25,6 @@ def test_run():
     dates = [(datetime.datetime(1990, 1, 1),
               datetime.datetime(2015, 12, 31))]
     res = tabulate(authors, dates, keywords, mesh, True)
-    print(res['search_counts'])
-    print(res['author_articles'])
     assert res['author_articles']['Reshma Jagsi']
 
 
