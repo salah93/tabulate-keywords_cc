@@ -72,17 +72,17 @@ def run(
         query_list, date_ranges, text_words, mesh_terms, isAuthor)
     author_articles = results['author_articles']
     search_count = results['search_counts']
-    cols = [('Author', 'No. first name articles')]
-    first_name_articles = cols + [(name, len(get_first_name_articles(
-                                      name, author_articles[name])))
-                            for name in authors]
     sc_df = DataFrame(search_count[1:], columns=search_count[0])
-    print(sc_df)
     sc_df.to_csv(search_count_path, index=False)
     # crosscompute print statement
     if isAuthor:
-        fa_df = DataFrame(first_name_articles)
-        fa_df.to_csv(search_count_path, index=False)
+        cols = ['Author', 'No. first name articles']
+        first_name_articles = [(name, len(get_first_name_articles(
+                                          name, author_articles[name])))
+                                for name in authors]
+        fa_df = DataFrame(first_name_articles, columns=cols)
+        
+        fa_df.to_csv(first_name_path, index=False)
         print("first_name_articles_table_path = " + first_name_path)
     print("search_count_table_path = " + search_count_path)
 
