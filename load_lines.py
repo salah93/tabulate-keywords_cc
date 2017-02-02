@@ -7,7 +7,7 @@ class ToolError(Exception):
 
 def get_date_ranges(from_date, to_date, interval_in_years):
     """
-    Retrieve pairs of date ranges based on interval number
+        Retrieve pairs of date ranges based on interval number
     """
     if from_date and to_date and from_date > to_date:
         raise ToolError('to_date must be after from_date')
@@ -26,13 +26,9 @@ def get_date_ranges(from_date, to_date, interval_in_years):
     return date_ranges
 
 
-def load_unique_lines(source):
-    if not source:
+def load_unique_lines(source_path):
+    if not source_path:
         return []
-    with open(source, 'rt') as f:
-        lines = set((normalize_line(line) for line in f)) 
+    with open(source_path, 'r') as f:
+        lines = set((x.strip(', ;') for x in f))
     return sorted(filter(lambda x: x, lines))
-
-
-def normalize_line(x):
-    return x.replace(',', '').replace(';', '').strip()
