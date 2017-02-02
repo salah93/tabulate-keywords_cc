@@ -22,6 +22,8 @@ from dateutil.parser import parse as parse_date
 from os.path import join
 
 from invisibleroads_macros.disk import make_folder
+import matplotlib
+matplotlib.use('Agg')
 from pandas import DataFrame
 from sqlalchemy.orm import sessionmaker
 
@@ -36,6 +38,7 @@ def tabulate(query_list, date_ranges, text_words, mesh_terms, isAuthor):
     # O(n*y) for n=len(query_list) and y=len(date_ranges)
     author_articles = defaultdict(list)
     sc = []
+    log = []
     if query_list:
         sc = [('from', 'to', 'name', 'count', 'count w/ keywords')]
         for from_date, to_date in date_ranges:
@@ -62,6 +65,8 @@ def tabulate(query_list, date_ranges, text_words, mesh_terms, isAuthor):
                 if keyword_count == 0:
                     articles = cache_results(query)
                     keyword_count = len(articles)
+                log.append("{query}\n{count}".format(query=item_query, count=item_count))
+                log.append("{query}\n{count}".format(query=query, count=keyword_count))
                 if isAuthor:
                     author_articles[item].extend(item_articles)
                 # Get search count data for each Query (w/ keywords)
@@ -77,8 +82,9 @@ def tabulate(query_list, date_ranges, text_words, mesh_terms, isAuthor):
             if count == 0:
                 articles = cache_results(query)
                 count = len(articles)
+            log.append("{query}\n{count}".format(query=query, count=count))
             sc.append((from_date, to_date, count))
-    return dict(search_counts=sc, author_articles=author_articles)
+    return dict(search_counts=sc, author_articles=author_articles, log=log)
 
 
 def create_csv(results_path, data):
@@ -165,4 +171,17 @@ if __name__ == '__main__':
         first_name_path = join(args.target_folder, 'first_named_articles.csv')
         fa_df.to_csv(first_name_path, index=False)
         print("first_name_articles_table_path = " + first_name_path)
-    # image_path = join(args.target_folder, 'keyword_article_count.jpg')
+    # log
+    queries = results['log']
+    log_path = join(args.target_folder, 'log.txt')
+    with open(log_path, 'w') as f:
+        f.write('\n\n'.join(queries))
+    print('log_text_path = ' + log_path)
+    # image of plot
+    if args.interval_in_years:
+        image_path = join(args.target_folder, 'keyword_article_count.png')
+        axes = (sc_df * 100).plot()
+        axes.set_title('Percent frequency over time')
+        figure = axes.get_figure()
+        figure.savefig(image_path)
+        print('plot_image_path = ' + image_path)
