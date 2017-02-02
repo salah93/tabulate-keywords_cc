@@ -1,4 +1,5 @@
 import re
+
 import requests
 from bs4 import BeautifulSoup
 from invisibleroads_macros.text import compact_whitespace

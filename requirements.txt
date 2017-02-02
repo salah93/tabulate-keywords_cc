@@ -1,7 +1,8 @@
-beautifulsoup4
+bs4
 crosscompute
 crosscompute-types
 invisibleroads_macros
 lxml
 pandas
 requests
+sqlalchemy
