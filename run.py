@@ -22,6 +22,7 @@ from dateutil.parser import parse as parse_date
 from os.path import join
 
 from invisibleroads_macros.disk import make_folder
+# needed for image
 import matplotlib
 matplotlib.use('Agg')
 from pandas import DataFrame

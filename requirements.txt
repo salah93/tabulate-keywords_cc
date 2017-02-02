@@ -3,6 +3,7 @@ crosscompute
 crosscompute-types
 invisibleroads_macros
 lxml
+matplotlib
 pandas
 requests
 sqlalchemy
