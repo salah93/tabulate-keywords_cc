@@ -1,13 +1,17 @@
 # Count PubMed search results
 
+
+## Steps
 ```
-pip install -r requirements.txt
-py.test
-crosscompute run
-crosscompute serve
+# update cc.ini accordingly
+$ pip install -r requirements.txt
+$ crosscompute run tabulate-authors
+$ crosscompute serve tabulate-authors
+$ crosscompute run tabulate-journals
+$ crosscompute serve tabulate-journals
 ```
 
-Example:
+## Example queries generated
 
  `cat journals.txt`
  ```
